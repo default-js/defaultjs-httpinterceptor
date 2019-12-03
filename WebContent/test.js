@@ -22,7 +22,7 @@ document.querySelector("#send-fetch-request").addEventListener("click", function
 	})["catch"](console.error);
 });
 
-RequestInterceptManager.addInterceptor(new de.titus.request.interceptor.interceptors.OAuthInterceptor({
+defaultjs.httpinterceptor.Manager.addInterceptor(new defaultjs.httpinterceptor.interceptors.OAuthInterceptor({
     	condition: [ "http://localhost:8080", "http://localhost:8081", "http://localhost:8082" ],
         login : {
             url : "http://localhost/jwt.json",
