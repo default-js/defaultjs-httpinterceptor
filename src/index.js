@@ -6,10 +6,9 @@ import Interceptors from "./interceptors";
 
 (function(Global){	
 	Global.de = Global.defaultjs || {};
-	Global.defaultjs = Global.defaultjs || {};
 	Global.defaultjs.httpinterceptor = Global.defaultjs.httpinterceptor || {
 		VERSION : "${version}",
 		Manager : Manager,
 		interceptors : Interceptors
 	};
-})(window|| global || self || this || {});
+})(window|| global || {});

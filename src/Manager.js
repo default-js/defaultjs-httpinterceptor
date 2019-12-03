@@ -2,31 +2,34 @@ const INTERCEPTORS = [];
 const CACHE = {};
 
 const getChain = function(aData, aRequest){
-	let chain = CACHE[aData.server];
+	let chain = CACHE[aData.metadata.origin];
 	if(typeof chain !== "undefined")
 		return Promise.resolve(chain);
 	
-	chain = [];
 	let promises = [];
 	INTERCEPTORS.forEach(function(aInterceptor){
-		promises.push(
-			aInterceptor.doAccept(aData)
+		let promise = Promise.resolve(aInterceptor.doAccept(aData))
 			.then(function(value){
 				if(value)
-					chain.push(aInterceptor);
-			}));
+					return aInterceptor;
+			});
+		promises.push(promise);
 	});
 	
 	return Promise.all(promises)
-	.then(function(){
-		CACHE[aData.origin] = chain;
-		return chain;
+	.then(function(chain){
+		const interceptors = chain.filter(function(interceptor){
+			return typeof interceptor !== "undefined";
+		});
+		
+		CACHE[aData.metadata.origin] = interceptors;
+		return interceptors;
 	})["catch"](function(error){throw error});
 };
 
 const isOriginIgnored = function(data, origins){
 	for(let i = 0; i < origins.length; i++)
-		if(data.origin == origins[i])
+		if(data.metadata.origin == origins[i])
 			return true;
 	
 	return false;
@@ -38,25 +41,24 @@ const Manager = {
 		ignoreOrigins : []		
 	},
 	interceptors : [],
-	doIntercept : function(aData, aRequest){
-		if(Manager.config.ignoreDocumentOrigin && aData.origin == document.location.origin)
-			return Promise.resolve(aData, aRequest);
+	doIntercept : function(aData){
+		if(Manager.config.ignoreDocumentOrigin && aData.metadata.origin == document.location.origin)
+			return Promise.resolve(aData);
 		if(typeof Manager.config.ignoreOrigins !== "undefined" && isOriginIgnored(aData, Manager.config.ignoreOrigins))
-			return Promise.resolve(aData, aRequest);
+			return Promise.resolve(aData);
 		
-		return getChain(aData, aRequest)
+		return getChain(aData)
 		.then(function(chain){
 			if(typeof chain === "undefined" || chain.length == 0)
-				return Promise.resolve();
+				return Promise.resolve(aData);
 			
 			let handles = [];
+			let promise = Promise.resolve(aData);
 			chain.forEach(function(aInterceptor){
-				handles.push(aInterceptor.doHandle(aData, aRequest));
+				promise.then(aInterceptor.doHandle);
 			});			
-			return Promise.all(handles);
-		}).then(function(){
-			return Promise.resolve(aData, aRequest);
-		})["catch"](function(error){throw error});
+			return promise;
+		})["catch"](function(error){throw error;});
 	},
 	addInterceptor : function(aInterceptor){		
 		if(arguments.length != 1 && typeof aInterceptor !== "object")
