@@ -22,18 +22,41 @@ document.querySelector("#send-fetch-request").addEventListener("click", function
 	})["catch"](console.error);
 });
 
-defaultjs.httpinterceptor.Manager.addInterceptor(new defaultjs.httpinterceptor.interceptors.OAuthInterceptor({
-    	condition: [ "http://localhost:8080", "http://localhost:8081", "http://localhost:8082" ],
-        login : {
-            url : "http://localhost/jwt.json",
-            method : "GET",
-            response : {
-                type : "authentication-header",
-                headerType : "Bearer",
-                valueType : "content",
-                valueSelector : "jwt"
-            }
-        },
-        refreshInterval : 10 * 60 * 1000
-    })
-);
+//defaultjs.httpinterceptor.Manager.addInterceptor(new defaultjs.httpinterceptor.interceptors.OAuthInterceptor({
+//    	condition: [ "http://localhost:8080", "http://localhost:8081", "http://localhost:8082" ],
+//        login : {
+//            url : "http://localhost/jwt.json",
+//            method : "GET",
+//            response : {
+//                type : "authentication-header",
+//                headerType : "Bearer",
+//                valueType : "content",
+//                valueSelector : "jwt"
+//            }
+//        },
+//        refreshInterval : 10 * 60 * 1000
+//    })
+//);
+
+defaultjs.httpinterceptor.Manager.addInterceptor(new defaultjs.httpinterceptor.interceptors.TokenInterceptor({
+	condition : function(aData){
+		return Promise.resolve(aData.metadata.origin == "http://localhost:8080");
+	},
+	fetchToken : function(aData){
+		return Promise.resolve("http://localhost/jwt.json")
+			.then(function(aUrl){
+				return fetch(aUrl);
+			}).then(function(aResponse){
+				return aResponse.json();
+			}).then(function(aResponse){
+				return Promise.resolve(aResponse.jwt);
+			});
+	},
+	appendToken : function(aToken, aData){
+		aData.request.headers = aData.request.headers || {};
+		aData.request.headers["Authorization"] = "Bearer " + aToken
+		
+		return aData;
+	},
+    refreshInterval : 10 * 60 * 1000
+}));

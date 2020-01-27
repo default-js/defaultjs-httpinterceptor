@@ -55,7 +55,7 @@ const Manager = {
 			let handles = [];
 			let promise = Promise.resolve(aData);
 			chain.forEach(function(aInterceptor){
-				promise.then(aInterceptor.doHandle);
+				promise = promise.then(aInterceptor.doHandle);
 			});			
 			return promise;
 		})["catch"](function(error){throw error;});

@@ -25,7 +25,7 @@ import Constants from "./Constants";
 		};
 		
 		xhr.open = function(aMethod, aUrl, isAsync, aUsername, aPassword){		
-			let match = Constants.URLSPLITTER.exec(aUrl);
+			const match = Constants.URLSPLITTER.exec(aUrl);
 			data = {
 				url : aUrl,
 				request : {

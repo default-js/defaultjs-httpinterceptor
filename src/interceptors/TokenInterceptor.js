@@ -34,7 +34,7 @@ const TokenInterceptor = function(aSetup){
 	let token = undefined;
 	
 	const defaultRefreshToken = function(){
-        new Promise(setup.fetchToken)
+        return new Promise(setup.fetchToken)
         .then(function(aToken){
             token = aToken;
         }); 
@@ -44,14 +44,14 @@ const TokenInterceptor = function(aSetup){
     	if(theAppender instanceof Array){
 			let promise = Promise.resolve(aData);
 			theAppender.forEach(function(appender){
-				promise.then(function(aData){
-					return Promise.resolve(appender(token, aData));
+				promise = promise.then(function(aData){
+					return appender(aToken, aData);
 				});
 			});
 			return promise;
 		}
 		else
-			return Promise.resolve(theAppender(token, aData));
+			return Promise.resolve(theAppender(aToken, aData));
     };
 	
 	if(setup.refreshInterval > 0){
@@ -70,7 +70,7 @@ const TokenInterceptor = function(aSetup){
 	
 	return {
 		doAccept : setup.doAccept || function(aData){			
-			let type = typeof setup.condition; 
+			const type = typeof setup.condition; 
 			if(type === "function")
 				return Promise.resolve(setup.condition(aData));
 			else if(type === "string")
