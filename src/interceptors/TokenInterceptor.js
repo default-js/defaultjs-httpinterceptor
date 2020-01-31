@@ -55,15 +55,13 @@ const TokenInterceptor = function(aSetup){
     };
 	
 	if(setup.refreshInterval > 0){
-	    const refreshToken = defaultRefreshToken
-	    if(typeof setup.refreshToken === "function"){
-	        refreshToken = function(){
-	            Promise.resolve(setup.refreshToken())
+	    const refreshToken = typeof setup.refreshToken === "function" ? function(){
+	            return Promise.resolve(setup.refreshToken())
 	            .then(function(aToken){
 	                token = aToken;
-	            }); 
-	        };
-	    }
+	            });
+	    	} : defaultRefreshToken;
+	    
 	    setInterval(refreshToken, setup.refreshInterval || (60 * 1000))
 	}
 	
