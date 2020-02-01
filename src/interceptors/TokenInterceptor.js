@@ -30,15 +30,8 @@
  * }
  */
 const TokenInterceptor = function(aSetup){
-	const setup = aSetup; 
+	const setup = aSetup;	
 	let token = undefined;
-	
-	const defaultRefreshToken = function(){
-        return new Promise(setup.fetchToken)
-        .then(function(aToken){
-            token = aToken;
-        }); 
-    };
     
     const callAppendToken = function(aToken, aData, theAppender){
     	if(theAppender instanceof Array){
@@ -53,17 +46,18 @@ const TokenInterceptor = function(aSetup){
 		else
 			return Promise.resolve(theAppender(aToken, aData));
     };
-	
-	if(setup.refreshInterval > 0){
-	    const refreshToken = typeof setup.refreshToken === "function" ? function(){
-	            return Promise.resolve(setup.refreshToken())
-	            .then(function(aToken){
-	                token = aToken;
-	            });
-	    	} : defaultRefreshToken;
-	    
-	    setInterval(refreshToken, setup.refreshInterval || (60 * 1000))
-	}
+    
+    const startRefresh = function(){	
+		if(setup.refreshInterval > 0){
+		    const refreshToken = typeof setup.refreshToken === "function" ? function(){
+		            token = Promise.resolve(setup.refreshToken())
+		    	} : function(){
+		    		token = Promise.resolve(setup.fetchToken());
+		    	};
+		    
+		    setInterval(refreshToken, setup.refreshInterval || (60 * 1000))
+		}
+    };
 	
 	
 	return {
@@ -81,14 +75,16 @@ const TokenInterceptor = function(aSetup){
 			return Promise.resolve(false);				
 		},
 		doHandle : function(aData){				
-			if(typeof token !== "undefined")
-				return callAppendToken(token, aData, setup.appendToken);
-			else
-				return Promise.resolve(setup.fetchToken())
-				.then(function(aToken){
-					token = aToken;
-					return callAppendToken(token, aData, setup.appendToken);
-				})["catch"](function(error){throw error});
+			if(!token)
+				token = Promise.resolve(setup.fetchToken())
+					.then(function(aToken){
+						startRefresh();
+						return aToken;
+					});			
+				
+			return token.then(function(aToken){
+				return callAppendToken(aToken, aData, setup.appendToken);
+			})["catch"](function(error){throw error});
 		}		
 	};
 };

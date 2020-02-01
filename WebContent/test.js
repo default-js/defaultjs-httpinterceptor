@@ -58,5 +58,5 @@ defaultjs.httpinterceptor.Manager.addInterceptor(new defaultjs.httpinterceptor.i
 		
 		return aData;
 	},
-    refreshInterval : 10 * 60 * 1000
+    refreshInterval : 5000
 }));
