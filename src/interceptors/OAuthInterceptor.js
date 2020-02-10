@@ -1,15 +1,12 @@
 import TokenInterceptor from "./TokenInterceptor"
 
 const OAuthInterceptor = function(aSetup){
-	let setup = aSetup;
+	const setup = aSetup;
 	setup.fetchToken = function(){
 		return fetch(setup.login.url, {
 			method: (setup.login.method || "get")
-		}).then(function(aResponse){
-			return aResponse.json();
-		}).then(function(aResponse){
-			return aResponse[setup.login.response.valueSelector];
-		})["catch"](function(error){throw error;});		
+		}).then(res => res.json())
+		.then(res => res[setup.login.response.valueSelector]);		
 	};
 	setup.appendToken = function(aToken, aData){
 		aData.request.headers = aData.request.headers || {};

@@ -1,14 +1,12 @@
+import {GLOBAL} from "./Utils";
 import "./XMLHttpRequest";
 import "./Fetch";
 import Manager from "./Manager";
 import Interceptors from "./interceptors";
 
-
-(function(Global){	
-	Global.defaultjs = Global.defaultjs || {};
-	Global.defaultjs.httpinterceptor = Global.defaultjs.httpinterceptor || {
-		VERSION : "${version}",
-		Manager : Manager,
-		interceptors : Interceptors
-	};
-})(window|| global || {});
+GLOBAL.defaultjs = GLOBAL.defaultjs || {};
+GLOBAL.defaultjs.httpinterceptor = GLOBAL.defaultjs.httpinterceptor || {
+	VERSION : "${version}",
+	Manager : Manager,
+	interceptors : Interceptors
+};

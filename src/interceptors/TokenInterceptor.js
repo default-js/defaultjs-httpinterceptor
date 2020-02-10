@@ -30,16 +30,14 @@
  * }
  */
 const TokenInterceptor = function(aSetup){
-	const setup = aSetup;	
+	const setup = aSetup;
 	let token = undefined;
     
     const callAppendToken = function(aToken, aData, theAppender){
     	if(theAppender instanceof Array){
 			let promise = Promise.resolve(aData);
-			theAppender.forEach(function(appender){
-				promise = promise.then(function(aData){
-					return appender(aToken, aData);
-				});
+			theAppender.forEach( appender => {
+				promise = promise.then(aData => appender(aToken, aData));
 			});
 			return promise;
 		}
@@ -61,7 +59,7 @@ const TokenInterceptor = function(aSetup){
 	
 	
 	return {
-		doAccept : setup.doAccept || function(aData){			
+		doAccept : setup.doAccept || function(aData){
 			const type = typeof setup.condition; 
 			if(type === "function")
 				return Promise.resolve(setup.condition(aData));
@@ -72,19 +70,17 @@ const TokenInterceptor = function(aSetup){
 					if(setup.condition[i] == aData.metadata.origin)
 						return Promise.resolve(true);
 			}	
-			return Promise.resolve(false);				
+			return Promise.resolve(false);
 		},
-		doHandle : function(aData){				
+		doHandle : function(aData){
 			if(!token)
 				token = Promise.resolve(setup.fetchToken())
-					.then(function(aToken){
+					.then(aToken => {
 						startRefresh();
 						return aToken;
-					});			
+					});
 				
-			return token.then(function(aToken){
-				return callAppendToken(aToken, aData, setup.appendToken);
-			})["catch"](function(error){throw error});
+			return token.then(aToken => callAppendToken(aToken, aData, setup.appendToken));
 		}		
 	};
 };

@@ -1,31 +1,28 @@
 import Manager from "./Manager";
-import Constants from "./Constants";
+import {GLOBAL} from "./Utils";
 
-(function(Global){
-	if(typeof Global.XMLHttpRequest === "undefined")
-		return;
-
-	const ORGXHR = Global.XMLHttpRequest;
+if(typeof GLOBAL.XMLHttpRequest !== "undefined"){
+	const ORGXHR = GLOBAL.XMLHttpRequest;
 	const executeRequest = function(aData){
 		ORGXHR.prototype.open.call(this, aData.request.method, aData.url, aData.metadata.async, aData.metadata.username, aData.metadata.password);
 		if(typeof aData.request.headers !== "undefined")
 			Object.getOwnPropertyNames(aData.request.headers)
-			.forEach((function(aHeader){
+			.forEach(aHeader =>{
 				ORGXHR.prototype.setRequestHeader.call(this, aHeader, aData.request.headers[aHeader]);
-			}).bind(this));
+			});
 		ORGXHR.prototype.send.call(this, aData.request.body);
 	}
-	let XHR = function (){
+	const XHR = function (){
 		const xhr = new ORGXHR(arguments);
-		let data = undefined;		
+		let data = undefined;
 		
 		xhr.setRequestHeader = function(aName, aValue){
-			data.request.headers = data.request.headers || {};			
+			data.request.headers = data.request.headers || {};
 			data.request.headers[aName] = aValue;
 		};
 		
-		xhr.open = function(aMethod, aUrl, isAsync, aUsername, aPassword){		
-			const match = Constants.URLSPLITTER.exec(aUrl);
+		xhr.open = function(aMethod, aUrl, isAsync, aUsername, aPassword){
+			const url = new URL(aUrl, GLOBAL.location.origin);
 			data = {
 				url : aUrl,
 				request : {
@@ -33,15 +30,13 @@ import Constants from "./Constants";
 				},
 				metadata : {
 					method : aMethod,
-					origin: match[1] || document.location.origin,
-					protocol : (function(match){
-						if(typeof match[2] === "undefined" || match[3] == "//")
-							return document.location.protocol || "http:";
-						else return match[3];			
-					}).call(null, match),
-					hostname: match[4] || document.location.hostname,
-					port: match[6],
-					query: match[7],
+					origin: url.origin,
+					protocol : url.protocol,
+					hostname: url.hostname,
+					port: url.port,
+					path : url.pathname,
+					query: url.search,
+					hash : url.hash,
 					async : typeof isAsync === "boolean" ? isAsync : true,
 					username : aUsername,
 					password : aPassword
@@ -63,9 +58,7 @@ import Constants from "./Constants";
 		return xhr;
 	};
 	
-	Global.XMLHttpRequest = XHR;
-	Global.XMLHttpRequest.prototype = ORGXHR.prototype;
-	Global.XMLHttpRequest.prototype.constructor = XHR;
-	
-	
-})(window || global || self, this, {});
+	GLOBAL.XMLHttpRequest = XHR;
+	GLOBAL.XMLHttpRequest.prototype = ORGXHR.prototype;
+	GLOBAL.XMLHttpRequest.prototype.constructor = XHR;
+}

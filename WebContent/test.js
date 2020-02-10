@@ -5,13 +5,13 @@ document.querySelector("#send-xhr-request").addEventListener("click", function()
 		if (xhttp.readyState == 4)
 			console.log("xhr request ready!", JSON.parse(this.response));
 	};
-	xhttp.open("GET", "http://localhost:8080/response.json", true);
+	xhttp.open("GET", "http://localhost:8080/response.json?test1=value1&test2=value2#hashtest", true);
 	xhttp.send();
 });
 
 document.querySelector("#send-fetch-request").addEventListener("click", function() {
 	console.log("send-fetch-request");
-	fetch("http://localhost:8080/response.json", {
+	fetch("http://localhost:8080/response.json?test1=value1&test2=value2#hashtest", {
 		headers : {
 			'Content-Type' : 'application/json'
 		}
