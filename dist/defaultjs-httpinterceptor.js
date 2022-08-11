@@ -378,7 +378,7 @@ if(typeof _Utils__WEBPACK_IMPORTED_MODULE_1__[/* GLOBAL */ "a"].XMLHttpRequest !
 
 _Utils__WEBPACK_IMPORTED_MODULE_0__[/* GLOBAL */ "a"].defaultjs = _Utils__WEBPACK_IMPORTED_MODULE_0__[/* GLOBAL */ "a"].defaultjs || {};
 _Utils__WEBPACK_IMPORTED_MODULE_0__[/* GLOBAL */ "a"].defaultjs.httpinterceptor = _Utils__WEBPACK_IMPORTED_MODULE_0__[/* GLOBAL */ "a"].defaultjs.httpinterceptor || {
-	VERSION : "1.1.0",
+	VERSION : "1.1.1",
 	Manager : _Manager__WEBPACK_IMPORTED_MODULE_3__[/* default */ "a"],
 	interceptors : _interceptors__WEBPACK_IMPORTED_MODULE_4__[/* default */ "a"]
 };
