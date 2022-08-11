@@ -1,7 +1,7 @@
 import {GLOBAL} from "./Utils";
 
 const INTERCEPTORS = [];
-const CACHE = {};
+let CACHE = {};
 
 const getChain = function(aData){
 	const chain = CACHE[aData.metadata.origin];
@@ -59,8 +59,11 @@ const Manager = {
 		if(typeof aInterceptor.doHandle !== "function")
 			throw new Error("The interceptor required a \"doHandle\" function!");
 		
-		INTERCEPTORS.push(aInterceptor);
+		INTERCEPTORS.push(aInterceptor);		
 		return Manager;
+	},
+	reset: ()=>{
+		CACHE = {};
 	}
 };
 export default Manager; 
