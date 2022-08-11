@@ -71,11 +71,13 @@ const TokenInterceptor = function (aSetup) {
 				return Promise.resolve(false);
 			},
 		doHandle: function (aData) {
-			if (!token)
-				token = Promise.resolve(setup.fetchToken(aData)).then((aToken) => {
+			if (!token){
+				const {url, metadata} = aData;
+				token = Promise.resolve(setup.fetchToken({url, metadata})).then((aToken) => {
 					startRefresh();
 					return aToken;
 				});
+			}
 
 			return token.then((aToken) => callAppendToken(aToken, aData, setup.appendToken));
 		},

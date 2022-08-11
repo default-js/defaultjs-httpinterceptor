@@ -3,7 +3,7 @@ import {GLOBAL} from "./Utils";
 	
 const ORGFETCH = GLOBAL.fetch;
 GLOBAL.fetch = function(aUrl, aRequest){
-	const url = new URL(aUrl, GLOBAL.location.origin);
+	const url = new URL(aUrl, GLOBAL.location);
 	return Manager.doIntercept({
 			url : aUrl,
 			request : aRequest || {},
