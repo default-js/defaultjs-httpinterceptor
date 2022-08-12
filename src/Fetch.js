@@ -1,10 +1,10 @@
 import Manager from "./Manager";
 import {GLOBAL} from "./Utils";
+import {ORGFETCH} from "./Constants";
 	
-const ORGFETCH = GLOBAL.fetch;
-GLOBAL.fetch = function(aUrl, aRequest){
+GLOBAL.fetch = async function(aUrl, aRequest){
 	const url = new URL(aUrl, GLOBAL.location);
-	return Manager.doIntercept({
+	const data = await Manager.doIntercept({
 			url : aUrl,
 			request : aRequest || {},
 			metadata : {
@@ -18,5 +18,7 @@ GLOBAL.fetch = function(aUrl, aRequest){
 				query: url.search,
 				async : true
 			}
-		}).then(aData =>ORGFETCH(aData.url, aData.request));
+		});
+			
+	return ORGFETCH(data.url, data.request);
 };
