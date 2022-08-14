@@ -5,7 +5,7 @@ import {ORGFETCH} from "./Constants";
 GLOBAL.fetch = async function(aUrl, aRequest){
 	const url = new URL(aUrl, GLOBAL.location);
 	const data = await Manager.doIntercept({
-			url : aUrl,
+			url : new URL(aUrl, location),
 			request : aRequest || {},
 			metadata : {
 				method : typeof aRequest === "undefined" ? "GET" : (aRequest.method || "GET"),

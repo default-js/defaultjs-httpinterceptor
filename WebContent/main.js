@@ -24,22 +24,39 @@
 		console.log("fetch request ready!", response);
 	});
 
-
-
-	Manager.addInterceptor(new TokenInterceptor({
-		condition: async (aData) => {
-			return true;
-		},
-		fetchToken: async (aData) => {
-			let response = await Manager.uncheckedFetch("/jwt.json");
-			response = await response.json();
-			return response.jwt;
-		},
-		appendToken: async (aToken, aData) => {
-			aData.request.headers = aData.request.headers || {};
-			aData.request.headers["Authorization"] = "Bearer " + aToken
-			return aData;
-		},
-		refreshInterval: 5000
+	Manager.setup((async () => {
+		console.log("setup");
+		return new Promise((r) => {
+			setTimeout(() => {
+				r(new TokenInterceptor({
+					condition: async (aData) => {
+						return true;
+					},
+					fetchToken: async (aData) => {
+						let response = await Manager.uncheckedFetch("/jwt.json");
+						response = await response.json();
+						return response.jwt;
+					},
+					appendToken: async (aToken, aData) => {
+						aData.request.headers = aData.request.headers || {};
+						aData.request.headers["Authorization"] = "Bearer " + aToken
+						return aData;
+					},
+					refreshInterval: 5000
+				}));
+				console.log("setup finished");
+			}, 5000);
+		});
 	}));
+
+	for (let i = 0; i < 10; i++) {
+		Manager.setup(new Promise((r) => {
+			const nr = i;
+			setTimeout(() => {
+				r();
+				console.log(`${nr}: setup finished`);
+			}, 1000 * i);
+		})
+		);
+	}
 })();

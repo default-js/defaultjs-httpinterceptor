@@ -1,4 +1,4 @@
-import {ORGFETCH} from "../Constants";
+import {ORGFETCH} from "./Constants";
 
 export default class Interceptor{
     async doAccept(data){}

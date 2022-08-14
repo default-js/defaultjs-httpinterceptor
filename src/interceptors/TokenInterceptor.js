@@ -7,30 +7,15 @@
  *  (optional) refreshInterval,
  *  (optional) refreshToken : function()
  * }
- *
- * aData =>
- * {
- * 	url : String,
- * 	request : {
- * 		method : string,
- * 		(optional) headers : {
- * 			[header name : string] : [header value : string],
- * 			...
- * 		},
- * 		(optional) body : {string | object | FormData | ...]
- * 	},
- * 	metadata : {
- * 		method : string,
- * 		origin : string,
- * 		hostname : string,
- * 		protocol : string,
- * 		(optional) port : number,
- * 		query : string,
- * 	}
- * }
  */
 
-import Interceptor from "./Interceptor";
+const defaultTokenAppender = async (token, data) => {
+	data.request.headers = data.request.headers || {};
+	data.request.headers["Authorization"] = `Bearer ${token}`;
+	return data;
+}
+
+import Interceptor from "../Interceptor";
 export default class TokenInterceptor extends Interceptor {
 
 	#token = null;
@@ -51,9 +36,9 @@ export default class TokenInterceptor extends Interceptor {
 			throw new Error(`Parameter "fetchToken" must be a "function"!`);
 		this.#fetchToken = fetchToken;
 
-		if(typeof appendToken !== "function")
+		if(appendToken && typeof appendToken !== "function")
 			throw new Error(`Parameter "appendToken" must be a "function"!`);
-		this.#appendToken = appendToken;
+		this.#appendToken = appendToken || defaultTokenAppender;
 
 		this.#refreshInterval = refreshInterval;
 		this.#refreshToken = refreshToken;
@@ -93,12 +78,17 @@ export default class TokenInterceptor extends Interceptor {
 	#startRefresh() {
 		if (this.#refreshInterval > 0) {
 			const refreshToken = this.#refreshToken || (() => this.#fetchToken(this.#lastData));
-			setInterval(() => {
+			const timeout = async () => {
 				if (this.#refreshToken)
-					this.#refreshToken(this.#lastData);
+					await this.#refreshToken(this.#lastData);
 				else
-					this.#fetchToken(this.#lastData);
-			}, this.#refreshInterval);
+					await this.#fetchToken(this.#lastData);
+
+				setTimeout(timeout,this.#refreshInterval );
+			};
+
+
+			setTimeout(timeout , this.#refreshInterval);
 		}
 	}
 };

@@ -24,7 +24,7 @@ if(typeof GLOBAL.XMLHttpRequest !== "undefined"){
 		xhr.open = function(aMethod, aUrl, isAsync, aUsername, aPassword){
 			const url = new URL(aUrl, GLOBAL.location.origin);
 			data = {
-				url : aUrl,
+				url : new URL(aUrl, location),
 				request : {
 					method : aMethod
 				},
