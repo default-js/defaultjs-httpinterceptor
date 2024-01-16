@@ -79,23 +79,40 @@ class Manager {
 		})();
 	}
 
-	async doIntercept(aData) {
+	/**
+	 * 
+	 * @param {object} data 
+	 * @param {(string|URL)} data.url
+	 * @param {(object|Request)} data.request
+	 * @param {object} data.metadata
+	 * @param {string} data.metadata.method
+	 * @param {string} data.metadata.origin
+	 * @param {string} data.metadata.protocol
+	 * @param {string} data.metadata.hostname
+	 * @param {number} data.metadata.port
+	 * @param {string} data.metadata.path
+	 * @param {string} data.metadata.hash
+	 * @param {URLSearchParams} data.metadata.query
+	 * @param {boolean} data.metadata.async
+	 * @returns {object} the manipulated data
+	 */
+	async doIntercept(data) {
 		await this.ready;
+		
+		const origin = data.metadata.origin;
 
-		const origin = aData.metadata.origin;
+		if (this.#isIgnored(origin, data.url.toString()))
+			return data;
 
-		if (this.#isIgnored(origin, aData.url.toString()))
-			return aData;
-
-		const { url, metadata } = aData;
+		const { url, metadata } = data;
 		const chain = await this.#getChain(origin, { url, metadata });
 		if (!chain)
-			return aData;
+			return data;
 
 		for (let interceptor of chain)
-			aData = await interceptor.doHandle(aData);
+			data = await interceptor.doHandle(data);
 
-		return aData;
+		return data;
 	}
 
 	reset() {
