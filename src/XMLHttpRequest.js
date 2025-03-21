@@ -3,15 +3,23 @@ import {GLOBAL} from "./Utils";
 
 if(typeof GLOBAL.XMLHttpRequest !== "undefined"){
 	const ORGXHR = GLOBAL.XMLHttpRequest;
-	const executeRequest = function(aData){
-		ORGXHR.prototype.open.call(this, aData.request.method, aData.url, aData.metadata.async, aData.metadata.username, aData.metadata.password);
-		if(typeof aData.request.headers !== "undefined")
-			Object.getOwnPropertyNames(aData.request.headers)
-			.forEach(aHeader =>{
-				ORGXHR.prototype.setRequestHeader.call(this, aHeader, aData.request.headers[aHeader]);
+	const OPEN = ORGXHR.prototype.open;
+	const SETREQUESTHEADER = ORGXHR.prototype.setRequestHeader;
+	const SEND = ORGXHR.prototype.send;
+
+	const executeRequest = (aXHR, { url, 
+		request: {method, headers, body}, 
+		metadata:{async, username, password}}) => {
+		url = typeof url === "string" ? url : url.toString();
+		OPEN.call(aXHR, method, url, async, username, password);
+		if(typeof headers !== "undefined")
+			Object.getOwnPropertyNames(headers)
+			.forEach(header =>{
+				SETREQUESTHEADER.call(aXHR, header, headers[header]);
 			});
-		ORGXHR.prototype.send.call(this, aData.request.body);
-	}
+		SEND.call(aXHR, body);
+	};
+
 	const XHR = function (){
 		const xhr = new ORGXHR(arguments);
 		let data = undefined;
@@ -45,20 +53,14 @@ if(typeof GLOBAL.XMLHttpRequest !== "undefined"){
 		};
 		
 		xhr.send = function(aBody){
-			if(data.metadata.async){
-				data.request.body = aBody; 
-	    		Manager.doIntercept(data)
-	    		.then(executeRequest.bind(xhr))
-	    		["catch"](console.error);
-		    }
-			else
-				executeRequest.call(xhr, data);
+			data.request.body = aBody; 
+			Manager.doIntercept(data)
+			.then((data) => executeRequest(xhr, data))
+			["catch"](console.error);
 		};
 		
 		return xhr;
 	};
 	
 	GLOBAL.XMLHttpRequest = XHR;
-	GLOBAL.XMLHttpRequest.prototype = ORGXHR.prototype;
-	GLOBAL.XMLHttpRequest.prototype.constructor = XHR;
 }
