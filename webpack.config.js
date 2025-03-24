@@ -21,6 +21,7 @@ module.exports = (env, argv) => {
 		},
         devtool: devMode ? "inline-source-map" : "source-map" ,
         devServer: {
+			//port: 9000,
             open: true,
 			allowedHosts: "all",
 			client: {

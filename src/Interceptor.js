@@ -1,4 +1,5 @@
-import { ORGFETCH } from "./Constants";
+import { ORGFETCH } from "./Constants.js";
+import "./TypeDefs.js";
 
 /**
  * Interface for classes that represents a request intercepter implementation.
@@ -7,45 +8,22 @@ import { ORGFETCH } from "./Constants";
  */
 export default class Interceptor {
 	/**
-	 * @param {object} data
-	 * @param {(string|URL)} data.url
-	 * @param {(object|Request)} data.request
-	 * @param {object} data.metadata
-	 * @param {string} data.metadata.method
-	 * @param {string} data.metadata.origin
-	 * @param {string} data.metadata.protocol
-	 * @param {string} data.metadata.hostname
-	 * @param {number} data.metadata.port
-	 * @param {string} data.metadata.path
-	 * @param {string} data.metadata.hash
-	 * @param {URLSearchParams} data.metadata.query
-	 * @param {boolean} data.metadata.async
-	 * @returns {boolean}
+	 * @async
+	 * @param {InterceptorData} data 
 	 */
 	async doAccept(data) {}
 	/**
-	 * @param {object} data
-	 * @param {(string|URL)} data.url
-	 * @param {(object|Request)} data.request
-	 * @param {object} data.metadata
-	 * @param {string} data.metadata.method
-	 * @param {string} data.metadata.origin
-	 * @param {string} data.metadata.protocol
-	 * @param {string} data.metadata.hostname
-	 * @param {number} data.metadata.port
-	 * @param {string} data.metadata.path
-	 * @param {string} data.metadata.hash
-	 * @param {URLSearchParams} data.metadata.query
-	 * @param {boolean} data.metadata.async
-	 * @returns {object} the manipulated data
+	 * @async
+	 * @param {InterceptorData} data 
+	 * @returns {InterceptorData | undefined }
 	 */
 	async doHandle(data) {}
 
 	/**
-	 *
+	 * @async
 	 * @param {(string|URL)} url
 	 * @param {(object|Request)} request
-	 * @returns {Response}
+	 * @returns {Promise<Response>}
 	 */
 	async unceckedFetch(url, request) {
 		return ORGFETCH(url, request);
