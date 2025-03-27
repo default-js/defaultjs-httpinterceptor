@@ -19,10 +19,10 @@ import "./TypeDefs.js";
 		}
 
 		open(aMethod, aUrl, isAsync, aUsername, aPassword) {
-			const url = new URL(aUrl, GLOBAL.location.origin);
+			const url = aUrl instanceof URL ? aUrl : new URL(aUrl, GLOBAL.location);
 
 			this.#data = {
-				url: new URL(aUrl, location),
+				url,
 				request: {
 					method: aMethod,
 				},
@@ -51,7 +51,7 @@ import "./TypeDefs.js";
 					const { method, headers, body } = request;
 					const { async, username, password } = metadata;
 					const target = typeof url === "string" ? url : url.toString();
-					super.open(method, target, async, username, username);
+					super.open(method, target, async, username, password);
 
 					if (typeof headers !== "undefined") Object.getOwnPropertyNames(headers).forEach((header) => super.setRequestHeader(header, headers[header]));
 					super.send(body);
@@ -60,5 +60,5 @@ import "./TypeDefs.js";
 		}
 	}
 
-	window.XMLHttpRequest = ExtXMLHttpRequest;
-})(window.XMLHttpRequest);
+	GLOBAL.XMLHttpRequest = ExtXMLHttpRequest;
+})(GLOBAL.XMLHttpRequest);

@@ -1,75 +1,103 @@
-import { GLOBAL } from "./Utils";
-import { ORGFETCH } from "./Constants";
+import { GLOBAL } from "./Utils.js";
+import { ORGFETCH } from "./Constants.js";
+import Interceptor from "./Interceptor.js";
 const CURRENTORIGIN = GLOBAL.location.origin;
 
 class Manager {
-	#cache = {};
-	#ignoredUrls = {};
-	#ignoredOrigins = {};
+	#cache = new Map();
+	#ignoredUrls = new Set();
+	#ignoredOrigins = new Set();
 	#ignoreDocumentOrigin = false;
+	
+	/**
+	 * @type {Array<Interceptor>}
+	 */
 	#interceptors = [];
+	/**
+	 * @type {Array<Function|Promise<Array<Interceptor>>|Promise<Interceptor>}
+	 */
 	#setup = [];
-	#readyCheck;
+	#readyCheck = null;
 
-	constructor() { }
+	constructor() {}
 
+	
+	/**
+	 * ignores interceptors for the current document origin
+	 *
+	 * @type {boolean}
+	 */
 	set ignoreDocumentOrigin(value) {
 		this.#ignoreDocumentOrigin = value;
 	}
 
+	/**
+	 * add origins to be ignored
+	 * @param {string|URL|Iterable<string>|Iterable<URL>} origins
+	 */
 	addOriginToIgnore(origins) {
-		if (origins instanceof Array)
-			for (let origin of origins)
-				this.#ignoredOrigins[origin.toString()] = true;
-		else
-			this.#ignoredOrigins[origins.toString()] = true;
+		if (Symbol.iterator in origins) for (let origin of origins) this.#ignoredOrigins.add(origin.toString());
+		else this.#ignoredOrigins[origins.toString()] = true;
 	}
 
+	/**
+	 * add urls to be ignored
+	 * @param {string|URL|Iterable<string>|Iterable<URL>} urls
+	 */
 	addUrlToIgnore(urls) {
-		if (urls instanceof Array)
-			for (let url of urls)
-				this.#ignoredUrls[url.toString()] = true;
-		else
-			this.#ignoredUrls[urls.toString()] = true;
+		if (Symbol.iterator in urls) for (let url of urls) this.#ignoredUrls.add(url.toString());
+		else this.#ignoredUrls.add(urls.toString());
 	}
 
-	setup(setup) {
-		if (typeof setup === "function" || setup instanceof Promise)
-			this.#setup.push(setup);
+	/**
+	 * 
+	 * @param {Function|Promise<Iterable<Interceptor>>|Promise<Interceptor>} aSetup
+	 */
+	setup(aSetup) {
+		if (typeof aSetup === "function" || aSetup instanceof Promise) 
+			this.#setup.push(aSetup);
 	}
 
+	/**
+	 * 
+	 * @param {Interceptor|Iterable<Interceptor>|object} aInterceptor 
+	 * @returns 
+	 */
 	addInterceptor(aInterceptor) {
-		if(aInterceptor instanceof Array)
-			return aInterceptor.forEach(interceptor => this.addInterceptor(interceptor));
-		if (typeof aInterceptor !== "object")
-			throw new Error("function required an interceptor");
-		if (typeof aInterceptor.doAccept !== "function")
-			throw new Error("The interceptor required a \"doAccept\" function!");
-		if (typeof aInterceptor.doHandle !== "function")
-			throw new Error("The interceptor required a \"doHandle\" function!");
+		if (Symbol.iterator in aInterceptor)
+			for (interceptor of aInterceptor)
+				this.addInterceptor(interceptor);
+		if (typeof aInterceptor !== "object") throw new Error("function required an interceptor");
+		if (typeof aInterceptor.doAccept !== "function") throw new Error('The interceptor required a "doAccept" function!');
+		if (typeof aInterceptor.doHandle !== "function") throw new Error('The interceptor required a "doHandle" function!');
 
 		this.#interceptors.push(aInterceptor);
 		this.reset();
 	}
 
+	/**
+	 * @readonly
+	 * @type {Promise<>}
+	 */
 	get ready() {
-		return (async () => {			
-			if (this.#setup.length == 0)
-				return true;
+		return (() => {
+			if (this.#setup.length == 0) return true;
 
-			if(this.#readyCheck)
-				return this.#readyCheck;
+			if (this.#readyCheck) return this.#readyCheck;
 
 			this.#readyCheck = (async () => {
-				while(this.#setup.length != 0){
-					const setup = this.#setup[0];
-					if (setup){
-						const interceptors = setup instanceof Promise ? await setup : await setup();
-						if(interceptors)
-							interceptors instanceof Array ? interceptors.forEach(interceptor => this.addInterceptor(interceptor)) : this.addInterceptor(interceptors);
-					}
-					
-					this.#setup.shift();
+				while (this.#setup.length != 0) {
+					const setup = this.#setup.shift();
+					const interceptors = await (setup instanceof Promise ? setup : setup());
+					if (interceptors)
+						if (Symbol.iterator in interceptors)
+							for (interceptor of interceptors)
+								this.addInterceptor(interceptor);
+						else if (interceptors instanceof Interceptor) 
+							this.addInterceptor(interceptors);
+						else 
+							this.addInterceptor(interceptors);
+						
 				}
 				this.#readyCheck = null;
 				return this.ready;
@@ -80,8 +108,8 @@ class Manager {
 	}
 
 	/**
-	 * 
-	 * @param {object} data 
+	 *
+	 * @param {object} data
 	 * @param {(string|URL)} data.url
 	 * @param {(object|Request)} data.request
 	 * @param {object} data.metadata
@@ -98,66 +126,64 @@ class Manager {
 	 */
 	async doIntercept(data) {
 		await this.ready;
-		
-		const origin = data.metadata.origin;
 
-		if (this.#isIgnored(origin, data.url.toString()))
-			return data;
+		const {	url, metadata } = data;
+		const { origin } = metadata;
+		if (this.#isIgnored(origin, data.url.toString())) return data;
 
-		const { url, metadata } = data;
 		const chain = await this.#getChain(origin, { url, metadata });
-		if (!chain)
-			return data;
+		if (!chain) return data;
 
-		for (let interceptor of chain)
-			data = await interceptor.doHandle(data);
+		for (let interceptor of chain) data = (await interceptor.doHandle(data)) || data;
 
 		return data;
 	}
 
 	reset() {
-		this.#cache = {};
+		this.#cache = new Map();
 	}
 
+	/**
+	 * make a classic fetch call without interception
+	 * 
+	 * @param {string|URL} url 
+	 * @param {object|Request} request 
+	 * @returns {Promise<Response>}
+	 */
 	async uncheckedFetch(url, request) {
 		return ORGFETCH(url, request);
 	}
 
 	#isIgnored(origin, url) {
-		if (this.#ignoredUrls[url])
-			return true
-		if (this.#ignoreDocumentOrigin && origin == CURRENTORIGIN)
-			return true;
-		if (this.#ignoredOrigins[origin])
-			return true;
+		if (this.#ignoredUrls.has(url)) return true;
+		if (this.#ignoreDocumentOrigin && origin == CURRENTORIGIN) return true;
+		if (this.#ignoredOrigins[origin]) return true;
 
-		return false
+		return false;
 	}
 
 	async #getChain(origin, data) {
-		let chain = this.#cache[origin];
+		let chain = this.#cache.get(origin);
 		if (!chain) {
-			chain = this.#interceptorForOrigin(origin, data);
-			this.#cache[origin] = chain;
+			chain = this.#interceptorForOrigin(data);
+			this.#cache.set(origin, chain);
 		}
 
 		return chain;
 	}
 
-	async #interceptorForOrigin(origin, data) {
+	async #interceptorForOrigin(data) {
 		const result = [];
 		for (let interceptor of this.#interceptors) {
-			if (await interceptor.doAccept(data))
-				result.push(interceptor)
+			if (await interceptor.doAccept(data)) result.push(interceptor);
 		}
 
 		return result;
 	}
-};
+}
 
 const INSTANCE = new Manager();
-setTimeout(() => INSTANCE.ready, 10);
-
+setTimeout(() => INSTANCE.ready, 100);
 
 export default INSTANCE;
-export {Manager};
+export { Manager };

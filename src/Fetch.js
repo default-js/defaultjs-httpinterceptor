@@ -3,9 +3,9 @@ import {GLOBAL} from "./Utils";
 import {ORGFETCH} from "./Constants";
 	
 GLOBAL.fetch = async function(aUrl, aRequest){
-	const url = new URL(aUrl, GLOBAL.location);
+	const url = aUrl instanceof URL ? aUrl : new URL(aUrl, GLOBAL.location);
 	const data = await Manager.doIntercept({
-			url : new URL(aUrl, location),
+			url,
 			request : aRequest || {},
 			metadata : {
 				method : typeof aRequest === "undefined" ? "GET" : (aRequest.method || "GET"),
