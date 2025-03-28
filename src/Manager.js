@@ -33,25 +33,25 @@ class Manager {
 
 	/**
 	 * add origins to be ignored
-	 * @param {string|URL|Iterable<string>|Iterable<URL>} origins
+	 * @param {string|URL|Array<string>|Array<URL>} origins
 	 */
 	addOriginToIgnore(origins) {
-		if (Symbol.iterator in origins) for (let origin of origins) this.#ignoredOrigins.add(origin.toString());
+		if (origins instanceof Array) for (let origin of origins) this.#ignoredOrigins.add(origin.toString());
 		else this.#ignoredOrigins[origins.toString()] = true;
 	}
 
 	/**
 	 * add urls to be ignored
-	 * @param {string|URL|Iterable<string>|Iterable<URL>} urls
+	 * @param {string|URL|Array<string>|Array<URL>} urls
 	 */
 	addUrlToIgnore(urls) {
-		if (Symbol.iterator in urls) for (let url of urls) this.#ignoredUrls.add(url.toString());
+		if (urls instanceof Array) for (let url of urls) this.#ignoredUrls.add(url.toString());
 		else this.#ignoredUrls.add(urls.toString());
 	}
 
 	/**
 	 * 
-	 * @param {Function|Promise<Iterable<Interceptor>>|Promise<Interceptor>} aSetup
+	 * @param {Function|Promise<Array<Interceptor>>|Promise<Interceptor>} aSetup
 	 */
 	setup(aSetup) {
 		if (typeof aSetup === "function" || aSetup instanceof Promise) 
@@ -60,11 +60,11 @@ class Manager {
 
 	/**
 	 * 
-	 * @param {Interceptor|Iterable<Interceptor>|object} aInterceptor 
+	 * @param {Interceptor|Array<Interceptor>|object} aInterceptor 
 	 * @returns 
 	 */
 	addInterceptor(aInterceptor) {
-		if (Symbol.iterator in aInterceptor)
+		if (aInterceptor instanceof Array)
 			for (interceptor of aInterceptor)
 				this.addInterceptor(interceptor);
 		if (typeof aInterceptor !== "object") throw new Error("function required an interceptor");
@@ -90,7 +90,7 @@ class Manager {
 					const setup = this.#setup.shift();
 					const interceptors = await (setup instanceof Promise ? setup : setup());
 					if (interceptors)
-						if (Symbol.iterator in interceptors)
+						if (interceptors instanceof Array)
 							for (interceptor of interceptors)
 								this.addInterceptor(interceptor);
 						else if (interceptors instanceof Interceptor) 
