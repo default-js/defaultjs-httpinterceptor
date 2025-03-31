@@ -165,7 +165,7 @@ class Manager {
 	async #getChain(origin, data) {
 		let chain = this.#cache.get(origin);
 		if (!chain) {
-			chain = this.#interceptorForOrigin(data);
+			chain = await this.#interceptorForOrigin(data);
 			this.#cache.set(origin, chain);
 		}
 
