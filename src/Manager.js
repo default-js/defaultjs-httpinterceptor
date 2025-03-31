@@ -87,7 +87,7 @@ class Manager {
 
 			this.#readyCheck = (async () => {
 				while (this.#setup.length != 0) {
-					const setup = this.#setup.shift();
+					const setup = this.#setup[0];
 					const interceptors = await (setup instanceof Promise ? setup : setup());
 					if (interceptors)
 						if (interceptors instanceof Array)
@@ -97,10 +97,11 @@ class Manager {
 							this.addInterceptor(interceptors);
 						else 
 							this.addInterceptor(interceptors);
-						
+
+					this.#setup.shift();
 				}
 				this.#readyCheck = null;
-				return this.ready;
+				return await this.ready;
 			})();
 
 			return this.#readyCheck;
