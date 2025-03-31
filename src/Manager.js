@@ -65,7 +65,7 @@ class Manager {
 	 */
 	addInterceptor(aInterceptor) {
 		if (aInterceptor instanceof Array)
-			for (interceptor of aInterceptor)
+			for (let interceptor of aInterceptor)
 				this.addInterceptor(interceptor);
 		if (typeof aInterceptor !== "object") throw new Error("function required an interceptor");
 		if (typeof aInterceptor.doAccept !== "function") throw new Error('The interceptor required a "doAccept" function!');
@@ -91,7 +91,7 @@ class Manager {
 					const interceptors = await (setup instanceof Promise ? setup : setup());
 					if (interceptors)
 						if (interceptors instanceof Array)
-							for (interceptor of interceptors)
+							for (let interceptor of interceptors)
 								this.addInterceptor(interceptor);
 						else if (interceptors instanceof Interceptor) 
 							this.addInterceptor(interceptors);
