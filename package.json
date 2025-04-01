@@ -1,7 +1,7 @@
 {
   "name": "@default-js/defaultjs-httpinterceptor",
   "buildname": "defaultjs-httpinterceptor",
-  "version": "1.3.7",
+  "version": "1.3.8",
   "description": "this helps you to intercept request at websites for oauth2 or token autentications or even what you need",
   "main": "./index.js",
   "scripts": {

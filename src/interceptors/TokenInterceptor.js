@@ -1,3 +1,19 @@
+import Interceptor from "../Interceptor";
+
+const HEADER__AUTHORIZATION = "Authorization";
+
+const defaultTokenAppender = async (token, data) => {
+	const headers = data.request.headers = data.request.headers || {};
+	if(headers instanceof Headers)
+		headers.set(HEADER__AUTHORIZATION)
+	else
+		headers[HEADER__AUTHORIZATION] = `Bearer ${token}`;
+	
+	return data;
+}
+
+
+
 /**
  * aSetup  =>
  * {
@@ -8,14 +24,6 @@
  *  (optional) refreshToken : function()
  * }
  */
-
-const defaultTokenAppender = async (token, data) => {
-	data.request.headers = data.request.headers || {};
-	data.request.headers["Authorization"] = `Bearer ${token}`;
-	return data;
-}
-
-import Interceptor from "../Interceptor";
 export default class TokenInterceptor extends Interceptor {
 
 	#token = null;

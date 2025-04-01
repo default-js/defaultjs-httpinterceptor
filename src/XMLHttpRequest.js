@@ -46,14 +46,18 @@ import "./TypeDefs.js";
 			this.#data.request.body = aBody;
 			Manager.doIntercept(this.#data)
 				.then((data) => {
-					console.log(data);
 					const { url, request, metadata } = data;
 					const { method, headers, body } = request;
 					const { async, username, password } = metadata;
 					const target = typeof url === "string" ? url : url.toString();
 					super.open(method, target, async, username, password);
 
-					if (typeof headers !== "undefined") Object.getOwnPropertyNames(headers).forEach((header) => super.setRequestHeader(header, headers[header]));
+					if (typeof headers !== "undefined" && headers != null){
+						if(headers instanceof Headers)
+							headers.forEach((value, name) => super.setRequestHeader(name, value));
+						else
+							Object.getOwnPropertyNames(headers).forEach((header) => super.setRequestHeader(header, headers[header]));
+					}
 					super.send(body);
 				})
 				["catch"](console.error);
